@@ -11,6 +11,7 @@
 #import "NSString+jsonString.h"
 #import "NSDictionary+jsonData.h"
 #import "RootOperation.h"
+#import "FMDBManager.h"
 
 #define IPADRESS @"120.27.53.216"
 #define OTHERPORT 8800
@@ -74,14 +75,7 @@ static RJSocket *socketManager = nil;
 //确认连接
 -(void)socket:(GCDAsyncSocket *)sock didConnectToHost:(NSString *)host port:(uint16_t)port
 {
-    if(sock == self.remoteSocket)
-    {
-        //将登录信息存入本地数据库
-       
-        NSLog(@"已经连接到BBS服务器 ");
-        // 获取滚动界面
-    }
-    else
+    if(sock == self.localSocket)
     {
         NSLog(@"已经连接到资源服务器 %@",host);
         NSArray *a = [NSArray arrayWithObject:@"BBS"];
@@ -91,10 +85,32 @@ static RJSocket *socketManager = nil;
         [self.remoteSocket readDataWithTimeout:-1 tag:395];
         
     }
+    else
+    {
+        //将登录信息存入本地数据库
+        DeviceModel *dm = [[DeviceModel alloc] init];
+        dm.ip = host, dm.port = port;
+        [[FMDBManager shareManager] insertModel:dm];
+        NSLog(@"已经连接到BBS服务器 ");
+        // 获取滚动界面
+        [self startThread];
+    }
     
 }
+
+- (void)startThread{
+    [NSThread detachNewThreadSelector:@selector(test) toTarget:self withObject:nil];
+    NSLog(@"start thread");
+}
+
+- (void)test{
+    while (1) {
+        NSLog(@"....");
+    }
+}
+
 //未连接服务器
-int BBSnum;
+int BBSnum = 0;
 -(void)socketDidDisconnect:(GCDAsyncSocket *)sock withError:(NSError *)err
 {
     if (sock == self.localSocket)
@@ -102,14 +118,15 @@ int BBSnum;
         NSLog(@"未连接资源服务器 %d",self.localSocket.isConnected);
         //数据库 连BBS
         
+        DeviceModel *dm = [[FMDBManager shareManager] selectModel];
+        
         //从本地数据库获取精华信息
-        if (!self.localSocket)
+        if (!self.remoteSocket)
         {
-            self.localSocket = [[GCDAsyncSocket alloc]initWithDelegate:self delegateQueue:dispatch_get_main_queue()];
-            // _mysocket = [[GCDAsyncSocket alloc]initWithDelegate:self delegateQueue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)];
+            self.remoteSocket = [[GCDAsyncSocket alloc]initWithDelegate:self delegateQueue:dispatch_get_main_queue()];
         }
-//        [self.localSocket connectToHost:ip onPort:port withTimeout:5.0 error:nil];
-        self.remoteSocket = nil;
+        [self.remoteSocket connectToHost:dm.ip onPort:dm.port withTimeout:5.0 error:nil];
+        self.localSocket = nil;
     }
     else
     {
@@ -162,13 +179,12 @@ int BBSnum;
             NSString *Ip = [[services objectAtIndex:0] objectForKey:@"IP"];
             NSString *port = [NSString stringWithFormat:@"%@",[[services objectAtIndex:0] objectForKey:@"PORT"]];
             
-            if (!self.localSocket)
+            if (!self.remoteSocket)
             {
-                self.localSocket = [[GCDAsyncSocket alloc]initWithDelegate:self delegateQueue:dispatch_get_main_queue()];
-                // _mysocket = [[GCDAsyncSocket alloc]initWithDelegate:self delegateQueue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)];
+                self.remoteSocket = [[GCDAsyncSocket alloc]initWithDelegate:self delegateQueue:dispatch_get_main_queue()];
             }
             
-            [self.localSocket connectToHost:Ip onPort:[port integerValue] withTimeout:5.0 error:nil];
+            [self.remoteSocket connectToHost:Ip onPort:[port integerValue] withTimeout:5.0 error:nil];
         }
     }
 //    if (_isBBS)

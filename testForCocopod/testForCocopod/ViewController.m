@@ -13,6 +13,8 @@
 #import "FMDBManager.h"
 
 @interface ViewController ()
+/** RJs*/
+@property (nonatomic, strong) RJSocket *Rj;
 
 @end
 
@@ -20,21 +22,10 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-
-//    FMDBManager *fm = [FMDBManager shareManager];
-//    
-//    DeviceModel * dm = [[DeviceModel alloc] init];
-//    dm.ip = @"192.231.12.32";
-//    dm.port = 54321;
-//    [fm insertModel:dm];
-//    
-//    dm = [fm selectModel];
-//    
-//    NSLog(@"%@ -- %ld", dm.ip, dm.port);
-//    
-//    [fm deleteAllData];
     
+    self.Rj = [RJSocket defaultScoket];
     
+    [self.Rj initSocket];
 }
 
 @end
