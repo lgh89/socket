@@ -1,0 +1,15 @@
+//
+//  RJFileManager.h
+//  testForCocopod
+//
+//  Created by lgh on 16/10/30.
+//  Copyright © 2016年 ruizi_G. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface RJFileManager : NSObject
+
++ (float)testForSize:(NSString *)path;
+
+@end
