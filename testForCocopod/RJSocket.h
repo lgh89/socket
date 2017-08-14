@@ -18,4 +18,6 @@
 
 - (void)sendDict:(NSDictionary *)dict;
 
+- (void)test;
+
 @end
